@@ -35,15 +35,15 @@ python -m pip install --upgrade --force-reinstall numpy-quaternion
 
 ## Example workflow (generating motion-blur dataset)
 
-### Download
+### 1. Download
 Download [dataset from Deblur-NeRF](https://hkustconnect-my.sharepoint.com/:f:/g/personal/lmaag_connect_ust_hk/EqB3QrnNG5FMpGzENQq_hBMBSaCQiZXP7yGCVlBHIGuSVA?e=UaSQCC)
 
-### Extract trajectory from Blender
+### 2. Extract trajectory from Blender
 1. Open `tanabata.blend` with Blender
 2. Select the `scripting` workspace in Blender, and drag the `export_keyframe_pose_tum_from_camera_animation.py` into Blender. Remember to change the output path to your own folder.
 3. Hit Run (Alt+P) to run the script. You will get a TUM-formatted trajectory file `gt_tanabata.txt`.
 
-### Interpolate
+### 3. Interpolate
 Interpolate the exported TUM-formatted trajectory with:
 
 ```sh
@@ -52,7 +52,19 @@ python generate_blur_trajectory_from_tum.py --input gt_tanabata.txt --output gt_
 
 Then you will get the interpolated `gt_tanabata_blur.txt` file.
 
-### Render
+### 4. Render
 
 Drag and drop `export_by_tum_pose.py` into Blender. Change the `WORK_DIR` to the current working directory with your `gt_tanabata_blur.txt` file.
 Hit Run (Alt+P) to run the script. Now you will get the rendered images.
+
+### 5. Generate blurry images
+
+Now you can generate blurry images with the rendered virtual sharp images:
+
+```sh
+python images_avg.py /path/to/rendered/
+```
+
+> P.S. Note that the folder `rendered` should contain the rendered `raw` folder.
+> 
+> P.P.S. Also, you need to change `blur_num` in `images_avg.py` if you changed `N_VIRT_CAMS` in `generate_blur_trajectory_from_tum.py`.
