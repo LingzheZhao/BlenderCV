@@ -1,6 +1,6 @@
 """
 Batch average virtual sharp images to blurry images
-@author: Wang Peng & Lingzhe Zhao
+@author: Peng Wang & Lingzhe Zhao
 """
 import imageio.v2 as imageio
 import numpy as np
