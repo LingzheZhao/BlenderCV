@@ -2,7 +2,7 @@
 
 A collection of scripts used in [Blender](https://www.blender.org/) to generate various computer vision datasets, including motion-blur, rolling-shutter, event, etc.
 
-## Install dependencies
+## Install dependency
 
 ### 1. [quaternions in numpy](https://quaternion.readthedocs.io/en/latest/)
 
@@ -24,7 +24,7 @@ python -m pip install --upgrade --force-reinstall numpy-quaternion
   - P.S. Remember to change `cp310` to your current python version
 - You can also build by yourself:
   - For Windows, you can use [chocolatey](https://chocolatey.org/) to install [cmake](https://community.chocolatey.org/packages/cmake) and [Eigen](https://community.chocolatey.org/packages/eigen)
-  - `cd dependencies/spline`
+  - `cd dependency/spline`
   - `pip install .`
 
 ## Example workflow (generating motion-blur dataset)
