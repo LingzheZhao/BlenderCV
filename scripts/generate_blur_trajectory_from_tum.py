@@ -76,7 +76,7 @@ def main():
         "--exposure_time", type=float, default=0.0156288 * 5, required=False
     )
     parser.add_argument("--n_virt_cams", type=int, default=31, required=False)
-    parser.add_argument("--n_upsample", type=float, default=1.0, required=False)
+    parser.add_argument("--n_upsample", type=float, default=4.0, required=False)
 
     args = parser.parse_args()
 

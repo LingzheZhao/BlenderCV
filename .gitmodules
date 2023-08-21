@@ -1,0 +1,4 @@
+[submodule "scripts/dependency/spline"]
+	path = scripts/dependency/spline
+	url = https://github.com/WU-CVGL/spline
+	branch = master
