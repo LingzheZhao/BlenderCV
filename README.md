@@ -7,7 +7,7 @@ A collection of scripts used in [Blender](https://www.blender.org/) to generate 
 ### 0. Clone this repo
 
 ```sh
-git clone --recursive git@github.com:WU-CVGL/BlenderCV.git
+git clone --recursive https://github.com/LingzheZhao/BlenderCV
 ```
 
 ### 1. [quaternions in numpy](https://quaternion.readthedocs.io/en/latest/)
