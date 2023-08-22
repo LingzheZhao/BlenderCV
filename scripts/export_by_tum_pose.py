@@ -24,6 +24,9 @@ WORK_DIR = os.path.join(WORK_DIR_ROOT, SEQUENCE)
 OUT_PREFIX = os.path.join(WORK_DIR, "raw")
 POSE_FILE = os.path.join(WORK_DIR_ROOT, "gt_tabataba_blur.txt")
 
+# Scaling factor on translation of input TUM trajectory
+SCALING_FACTOR = 1.0
+
 # Enable jump here to quickly get a glimpse of the outputs
 ENABLE_JUMP = False
 JUMP_NUM = 500
@@ -101,6 +104,7 @@ def read_tum_trajectory_file(file_path: str):
     stamps = mat[:, 0]  # n x 1
     xyz = mat[:, 1:4]  # n x 3
     quat = mat[:, 4:]  # n x 4
+    xyz *= SCALING_FACTOR
     quat = np.roll(quat, 1, axis=1)  # shift 1 column -> w in front column
     print(f"Loaded {len(stamps)} stamps and poses from: {file_path}")
     return (stamps, xyz, quat)
