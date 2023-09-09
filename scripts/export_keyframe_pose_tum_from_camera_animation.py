@@ -1,13 +1,16 @@
 import bpy
 from pathlib import Path
 
-OUTPUT_DIR = Path("/home/lzzhao/data/ws_tencent-blender")
-OUTPUT_FILE = OUTPUT_DIR / "gt_tabataba.txt"
+WORK_DIR = Path("/home/cvgluser/data/blender_ws/BlenderCV/data/deblur_nerf")
+SEQUENCE = "tanabata"
+CAMERA = "Camera"
 
+OUTPUT_DIR = WORK_DIR / SEQUENCE
+OUTPUT_FILE = OUTPUT_DIR / "groundtruth.txt"
 OUTPUT_FILE.parent.mkdir(exist_ok=True)
 
 scene = bpy.context.scene
-cam = bpy.context.scene.objects.get('Camera.001', None)
+cam = scene.objects.get(CAMERA, None)
 
 def stringify_tum_pose(i, translation, quaternion):
     t = translation
@@ -17,11 +20,9 @@ def stringify_tum_pose(i, translation, quaternion):
 with open (OUTPUT_FILE, "w") as f:
     f.write("#timestamp tx ty tz qx qy qz qw\n")
     for framei in range(scene.frame_end):
-        cam.rotation_mode = 'XYZ'
         scene.frame_set(framei)
-        cam.rotation_mode = 'QUATERNION'
         f.write(stringify_tum_pose(
             framei,
-            cam.location,
-            cam.rotation_quaternion,
+            cam.matrix_world.translation,
+            cam.matrix_world.to_quaternion(),
         ))

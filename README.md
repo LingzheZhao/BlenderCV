@@ -29,6 +29,7 @@ python -m pip install --upgrade --force-reinstall numpy-quaternion
   - `pip install ./spline-1.0.4-cp310-cp310-win_amd64.whl`
   - P.S. Remember to change `cp310` to your current python version
 - You can also build by yourself:
+  - For linux, e.g. Ubuntu, install dependencies with: `sudo apt install -y cmake build-essential libeigen3-dev`
   - For Windows, you can use [chocolatey](https://chocolatey.org/) to install [cmake](https://community.chocolatey.org/packages/cmake) and [Eigen](https://community.chocolatey.org/packages/eigen)
   - `cd dependency/spline`
   - `pip install .`
@@ -41,20 +42,21 @@ Download [dataset from Deblur-NeRF](https://hkustconnect-my.sharepoint.com/:f:/g
 ### 1. Extract trajectory from Blender
 1. Open `tanabata.blend` with Blender
 2. Select the `scripting` workspace in Blender, and drag the `export_keyframe_pose_tum_from_camera_animation.py` into Blender. Remember to change the output path to your own folder.
-3. Hit Run (Alt+P) to run the script. You will get a TUM-formatted trajectory file `gt_tanabata.txt`.
+3. Hit Run (Alt+P) to run the script. You will get a TUM-formatted trajectory file `tanabata/groundtruth.txt`.
 
 ### 2. Interpolate
 Interpolate the exported TUM-formatted trajectory with:
 
 ```sh
-python generate_blur_trajectory_from_tum.py --input gt_tanabata.txt --output gt_tanabata_blur.txt --n_upsample 4
+mkdir ../data/deblur_nerf/tanabata_blur
+python generate_blur_trajectory_from_tum.py --input ../data/deblur_nerf/tanabata/groundtruth.txt --output ../data/deblur_nerf/tanabata_blur/groundtruth.txt --n_upsample 4
 ```
 
-Then you will get the interpolated `gt_tanabata_blur.txt` file.
+Then you will get the interpolated `tanabata_blur/groundtruth.txt` file.
 
 ### 3. Render
 
-Drag and drop `export_by_tum_pose.py` into Blender. Change the `WORK_DIR` to the current working directory with your `gt_tanabata_blur.txt` file.
+Drag and drop `render_by_tum_pose.py` into Blender. Change the `WORK_DIR` to the current working directory with your `tanabata_blur/groundtruth.txt` file.
 Hit Run (Alt+P) to run the script. Now you will get the rendered images.
 
 ### 4. Generate blurry images
@@ -71,4 +73,4 @@ python images_avg.py /path/to/rendered/
 
 ## Acknowledgments
 
-- `export_by_tum_pose.py` is derived from `Deblur-NeRF`: https://github.com/limacv/Deblur-NeRF/
+- `render_by_tum_pose.py` is derived from `Deblur-NeRF`: https://github.com/limacv/Deblur-NeRF/

@@ -4,12 +4,12 @@ A simple script that used in blender to render with TUM formatted poses.
 Created by LingzheZhao (zhaolingzhe AT westlake.edu.cn)
 Created Date: 2023-05-25
 """
-import argparse, sys, os
+import os
 import binascii
 import csv
 import json
 import bpy
-from mathutils import Vector, Quaternion
+from mathutils import Quaternion
 import numpy as np
 
 from typing import Tuple, List
@@ -18,11 +18,11 @@ Camera = "Camera"
 RESOLUTION_X = 600  # MALI: change resolution
 RESOLUTION_Y = 400
 FORMAT = "PNG"
-WORK_DIR_ROOT = "/home/lzzhao/data/ws_tencent-blender/"
+WORK_DIR_ROOT = "/home/cvgluser/data/blender_ws/BlenderCV/data/deblur_nerf"
 SEQUENCE = "tanabata_blur"
 WORK_DIR = os.path.join(WORK_DIR_ROOT, SEQUENCE)
 OUT_PREFIX = os.path.join(WORK_DIR, "raw")
-POSE_FILE = os.path.join(WORK_DIR_ROOT, "gt_tabataba_blur.txt")
+POSE_FILE = os.path.join(WORK_DIR, "groundtruth.txt")
 
 # Scaling factor on translation of input TUM trajectory
 SCALING_FACTOR = 1.0
@@ -123,45 +123,6 @@ if cam is None or target is None:
 scene.frame_set(0)
 scene.camera = cam  # set rendering camera
 
-"""
-Copy initial pose from scene
-"""
-# cam_init_rot = cam.rotation_quaternion
-# cam_init_pos = cam.location
-
-"""
-Set initial pose manually:
-
-First change the rotation_mode back to Euler in console for easier adjustement:
-
-    >>> cam = bpy.context.scene.objects.get('Camera', None)
-    >>> cam.rotation_mode = 'XYZ'
-
-Then adjust the X, Y, Z values of the camera in GUI (blender shortcut: N).
-
-To get the camera pose after adjustment:
-
-    >>> cam.rotation_euler.to_quaternion()
-
-Use this value in cam_init_rot below.
-
-You also need the translation part:
-
-    >>> cam.location
-
-Use this value in cam_init_pos below.
-"""
-if "factory" in SEQUENCE:
-    # Set a starting point
-    cam_init_rot = Quaternion(
-        (0.5793769359588623, 0.3776257038116455, 0.4355151355266571, 0.5762358903884888)
-    )
-    cam_init_pos = Vector((11.00469970703125, -0.08247999846935272, 2.7502200603485107))
-elif "tanabata" in SEQUENCE or "pool" in SEQUENCE:
-    # Use current camera pose as starting point
-    cam_init_rot = cam.rotation_quaternion
-    cam_init_pos = cam.location
-
 if not os.path.exists(OUT_PREFIX):
     os.makedirs(OUT_PREFIX)
 
@@ -173,24 +134,14 @@ out_data = {
     "frames": [],
 }
 
-ts, xyz, quat_wxyz = read_tum_trajectory_file(POSE_FILE)
+ts, translations, quat_wxyz = read_tum_trajectory_file(POSE_FILE)
 N = len(ts)
-assert len(xyz) == N
+assert len(translations) == N
 assert len(quat_wxyz) == N
-
-translations = []
-for t in xyz:
-    translations.append(Vector(t) - Vector(xyz[0]) + cam_init_pos)
 
 quat_blender = []
 for q in quat_wxyz:
     quat_blender.append(Quaternion(q))
-
-q0_inverted = quat_blender[0].inverted()
-rotations = []
-for q in quat_blender:
-    rotations.append(q0_inverted.cross(q).cross(cam_init_rot))
-
 
 for framei in range(N):
     if ENABLE_JUMP and 0 != framei % JUMP_NUM:
@@ -201,8 +152,8 @@ for framei in range(N):
     scene.collection.objects.link(new_cam)
     scene.camera = new_cam  # set rendering camera
 
-    new_cam.location = translations[framei]
-    new_cam.rotation_quaternion = rotations[framei]
+    new_cam.matrix_world = quat_blender[framei].normalized().to_matrix().to_4x4()
+    new_cam.matrix_world.translation = translations[framei]
     frame_data = {"transform_matrix": listify_matrix(new_cam.matrix_world)}
 
     # render

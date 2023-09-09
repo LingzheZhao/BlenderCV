@@ -46,7 +46,7 @@ def save_blur_image_poses(
         R_b2w = trajectory.getRotation(t)
         fstream.write(
             "%.8f %.8f %.8f %.8f %.8f %.8f %.8f %.8f\n"
-            % (t, t_b2w[0], t_b2w[1], t_b2w[2], R_b2w[1], R_b2w[2], R_b2w[3], R_b2w[0])
+            % (t, t_b2w[0], t_b2w[1], t_b2w[2], R_b2w[0], R_b2w[1], R_b2w[2], R_b2w[3])
         )
 
 
