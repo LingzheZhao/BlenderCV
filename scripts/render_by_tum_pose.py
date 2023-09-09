@@ -11,8 +11,8 @@ import json
 import bpy
 from mathutils import Quaternion
 import numpy as np
-
 from typing import Tuple, List
+
 
 Camera = "Camera"
 RESOLUTION_X = 600  # MALI: change resolution
@@ -31,18 +31,53 @@ SCALING_FACTOR = 1.0
 ENABLE_JUMP = False
 JUMP_NUM = 500
 
-# Common Settings
-# print(f'Active Devices: {bpy.context.preferences.addons["cycles"].preferences.has_active_device()}')
-scene = bpy.context.scene
-scene.render.resolution_x = RESOLUTION_X
-scene.render.resolution_y = RESOLUTION_Y
 
-# Render Optimizations
-bpy.context.scene.render.use_persistent_data = True
+# Borrowed from https://github.com/anyeZHY/PyBlend
+def config_cycle_gpu(verbose=False):
+    devices = []
+    bpy.data.scenes[0].render.engine = "CYCLES"
+    bpy.context.preferences.addons["cycles"].preferences.compute_device_type = "CUDA"
+    bpy.context.scene.cycles.device = "GPU"
+    bpy.context.preferences.addons["cycles"].preferences.get_devices()
 
-# Background
-bpy.context.scene.render.dither_intensity = 0.0
-# bpy.context.scene.render.film_transparent = False
+    if verbose:
+        print(bpy.context.preferences.addons["cycles"].preferences.compute_device_type)
+
+    for d in bpy.context.preferences.addons["cycles"].preferences.devices:
+        if d["name"][0] == "N":  # enable NVIDIA devices
+            d["use"] = 1
+            devices.append(d["name"])
+
+    return devices
+
+
+# Borrowed from PyBlend and simplified.
+def enable_depth_render(base_path="output"):
+    """
+    Enable depth render and output exr and png. The png is normalized to [0, 1]
+    and saved in base_path. The exr is the raw depth value. The png is useful for
+    visualization.
+
+    Args:
+        base_path (str, optional): base path to save the exr and png. Defaults to "output".
+    """
+    bpy.context.scene.use_nodes = True
+    bpy.data.scenes["Scene"].view_layers["View Layer"].use_pass_z = True
+    nodes = bpy.context.scene.node_tree.nodes
+    links = bpy.context.scene.node_tree.links
+    if "Render Layers" not in nodes:
+        render_node = nodes.new("CompositorNodeRLayers")
+    else:
+        render_node = nodes["Render Layers"]
+
+    exr_output_node = nodes.new("CompositorNodeOutputFile")
+    exr_output_node.format.file_format = "OPEN_EXR"
+    # read exr with:
+    # 1. OPENCV_IO_ENABLE_OPENEXR=1
+    # 2. cv2.imread(PATH_TO_EXR_FILE, cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
+    exr_output_node.base_path = base_path
+    link1 = links.new(render_node.outputs[2], exr_output_node.inputs[0])
+    return exr_output_node
 
 
 def listify_matrix(matrix):
@@ -109,11 +144,25 @@ def read_tum_trajectory_file(file_path: str):
     print(f"Loaded {len(stamps)} stamps and poses from: {file_path}")
     return (stamps, xyz, quat)
 
+# Common Settings
+# print(f'Active Devices: {bpy.context.preferences.addons["cycles"].preferences.has_active_device()}')
+scene = bpy.context.scene
+scene.render.resolution_x = RESOLUTION_X
+scene.render.resolution_y = RESOLUTION_Y
+config_cycle_gpu()
+
+# Render Optimizations
+bpy.context.scene.render.use_persistent_data = True
+
+# Background
+bpy.context.scene.render.dither_intensity = 0.0
+# bpy.context.scene.render.film_transparent = False
 
 scene.render.image_settings.file_format = "PNG"  # set output format to .png
+exr_depth_node = enable_depth_render(f"{OUT_PREFIX}/depth")
+exr_depth_node.file_slots[0].path = f"depth_######"
 
 # Create collection for objects not to render with background
-
 cam = bpy.context.scene.objects.get(Camera, None)
 cam.rotation_mode = "QUATERNION"
 target = bpy.context.scene.objects.get("Target", None)
@@ -157,7 +206,8 @@ for framei in range(N):
     frame_data = {"transform_matrix": listify_matrix(new_cam.matrix_world)}
 
     # render
-    scene.render.filepath = OUT_PREFIX + f"/{framei:06d}"
+    bpy.context.scene.frame_current = framei
+    scene.render.filepath = f"{OUT_PREFIX}/rgb/{framei:06d}"
     bpy.ops.render.render(write_still=True)  # render still
     bpy.data.objects.remove(new_cam, do_unlink=True)
     out_data["frames"].append(frame_data)

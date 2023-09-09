@@ -73,4 +73,5 @@ python images_avg.py /path/to/rendered/
 
 ## Acknowledgments
 
-- `render_by_tum_pose.py` is derived from `Deblur-NeRF`: https://github.com/limacv/Deblur-NeRF/
+- `render_by_tum_pose.py` is derived from [Deblur-NeRF](https://github.com/limacv/Deblur-NeRF/)
+- Depth rendering is borrowed from [PyBlend](https://github.com/anyeZHY/PyBlend)
